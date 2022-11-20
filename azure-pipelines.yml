@@ -1,0 +1,49 @@
+# Android
+# Build your Android project with Gradle.
+# Add steps that test, sign, and distribute the APK, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/android
+
+trigger:
+- master
+
+pool:
+  vmImage: 'macos-latest'
+
+variables:
+- group: QA
+- name: VersionRevision
+  value: $[counter('VersionNumber',0)]
+
+steps:
+- bash: echo "##vso[task.setvariable variable=VERSION;]$(VersionNumber).$(VersionRevision)"
+  displayName: Set Version Value
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your PowerShell commands here.
+      Write-Host "update build $(Build.BuildId)"
+      Write-Host "Build version - $(VERSION)"
+      Write-Host "##vso[build.updatebuildnumber]$(VERSION)"
+
+- task: Gradle@2
+  inputs:
+    workingDirectory: ''
+    gradleWrapperFile: 'gradlew'
+    gradleOptions: '-Xmx4096m'
+    publishJUnitResults: false
+    testResultsFiles: '**/TEST-*.xml'
+    tasks: 'assembleQaRelease'
+
+- task: CopyFiles@2
+  inputs:
+    Contents: '**/*.apk'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    flattenFolders: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
