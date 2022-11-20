@@ -34,7 +34,7 @@ steps:
     gradleOptions: '-Xmx4096m'
     publishJUnitResults: false
     testResultsFiles: '**/TEST-*.xml'
-    tasks: 'assembleQaRelease'
+    tasks: 'assembleDebug'
 
 - task: CopyFiles@2
   inputs:
